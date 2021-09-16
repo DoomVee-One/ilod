@@ -1,0 +1,318 @@
+openapi: 3.0.2
+info:
+  title: Imperial Library of Doom
+  version: "1.0"
+  description: |-
+    The Imperial Library of Doom is a library service and reader
+    offering both books of academic and fictional nature!
+
+    This document details our API as it is currently planned to
+    be built!
+
+    # Usage Policy
+    Usage of this service implies acceptance of following:
+    - You are not allowed to distribute credentials or access to
+      this service, which was explicitly granted to you to any
+      other individual.
+
+    # Authentication
+    You can login with the `/auth/login` endpoint. There you
+    will be redirected to Discord OAuth2 API, which will then allow
+    us upon redirect to determine, whether you are a whitelisted
+    library user or not.
+    Only whitelisted users will then be able to access the library's
+    resources!
+
+    # Rate Limits
+    The API enforces rate limits to prevent the server from being
+    flooded with malicious request in case of a breach in
+    authentication. This can only occur if a trusted user of this API
+    shares their authentication information with a non-trusted
+    outsider. If such case is detected that user account will be
+    banned from using this API!
+
+servers:
+  - url: 'http://localhost:3000'
+    description: 'Local Server'
+
+security:
+  - OAuth2:
+      - identify
+
+paths:
+  /auth/login:
+    get:
+      summary: Login
+      description: |-
+        Redirects to Discords OAuth2 Page, where the user will be
+        requested to authorize this application to read the Discord
+        ID, username and discriminator!
+      tags:
+        - Authentication
+      security: []
+      responses:
+        '302':
+          description: Redirect to Discord OAuth2
+  /auth/redirect:
+    get:
+      summary: OAuth2 Redirect
+      description: |-
+        Retrieves the Token information from the Discord OAuth2 API
+        and stores id, username & discriminator securely in the
+        database for future use.
+      tags:
+        - Authentication
+      security: []
+      responses:
+        '200':
+          description: Successful Authentication
+        '401':
+          description: 'Unauthorized: Authentication Denied'
+  /auth/status:
+    get:
+      summary: Current User
+      description: |-
+        Obtain the information on the currently logged in user.
+      tags:
+        - Authentication
+      responses:
+        '200':
+          description: Shallow User Object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '403':
+          description: Not Authenticated
+  /auth/logout:
+    get:
+      summary: Destroy Session
+      description: |-
+        Destroy the current session by logging out and removing
+        the session id from the store.
+      tags:
+        - Authentication
+      responses:
+        '200':
+          description: Successful Logout
+        '403':
+          description: Not Authenticated
+  /api/v1/user/all:
+    get:
+      summary: All Users
+      description: |-
+        Obtain a shallow user list for administration
+        purposes
+      tags:
+        - Library Management
+      responses:
+        '200':
+          description: Shallow User List
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '403':
+          description: Not Authorized
+  /api/v1/user/whitelist:
+    post:
+      summary: Whitelist User
+      description: |-
+        Whitelists a user in the database by enabling
+        authentication and adding the `READER` role.
+      tags:
+        - Library Management
+      requestBody:
+        description: |-
+          User Properties in order to properly identify
+          the user, which should be whitelisted!
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiscordUser'
+      responses:
+        '201':
+          description: Whitelisted User
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '403':
+          description: Not Authorized
+    get:
+      summary: Whitelist
+      description: |-
+        Retrieve the Whitelist, which contains exclusively
+        enabled users.
+      tags:
+        - Library Management
+      responses:
+        '200':
+          description: Shallow Whitelist
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '403':
+          description: Not Authorized
+  /api/v1/user/ban:
+    post:
+      summary: Ban User
+      description: |-
+        Ban the user from accessing the library. This
+        action automatically logs out the user and disables
+        them from logging back in by disabling their account!  
+        This is a security measure, which should be used with
+        care!
+      tags:
+        - Library Management
+      requestBody:
+        description: |-
+          Discord User ID
+          required: true
+          content:
+            application/json:
+              schema:
+                title: BanPayload
+                description: |-
+                  JSON Payload containing the users Discord ID.
+                type: object
+                properties:
+                  id:
+                    type: string
+                    pattern: '\d{18}'
+                    example: '756757056941326397'
+      responses:
+        '200':
+          description: Successfully disabled user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '403':
+          description: Unauthorized
+        '418':
+          description: I'm a Teapot, can't ban this User
+  /api/v1/tag/all:
+    get:
+      summary: All Tags
+      description: |-
+        Obtain a shallow tag list, which can be used
+        for creating a tag enum or providing a list
+        of tags for tag management!
+      tags:
+        - Library Management
+      responses:
+        '200':
+          description: Shallow Tag List
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tag'
+        '403':
+          description: Not Authenticated
+  /api/v1/tag:
+    post:
+      summary: Create Tag
+      description: |-
+        Create a Tag, which can be used within the API
+        to categorize literature in easily searchable
+        tags.
+      responses:
+        '201':
+          description: Tag Created
+        '403':
+          description: Not Authorized
+
+components:
+  schemas:
+    DiscordUser:
+      title: DiscordUser
+      description: 'Discord User'
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: '\d{18}'
+          example: '756757056941326397'
+        username:
+          type: string
+          example: 'イオタ-天才'
+        discriminator:
+          type: string
+          pattern: '\d{4}'
+          example: '3316'
+    User:
+      title: User
+      description: 'User Object'
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: '\d{18}'
+          example: '756757056941326397'
+        username:
+          type: string
+          example: 'イオタ-天才'
+        discriminator:
+          type: string
+          pattern: '\d{4}'
+          example: '3316'
+        enabled:
+          type: boolean
+          default: true
+          required: false
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserRole'
+    UserRole:
+      description: 'User Role'
+      type: string
+      enum:
+        - ADMINISTRATOR
+        - READER
+    Tag:
+      title: Tag
+      description: 'Literature Tag'
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        title:
+          type: string
+          example: 'Manga'
+        type:
+          $ref: '#/components/schemas/TagType'
+    TagType:
+      title: TagType
+      description: 'Type of tag'
+      type: string
+      enum:
+        - GENRE
+        - SUBJECT
+        - TOPIC
+        - KEYWORD
+    UUID:
+      title: UUID
+      description: 'Autogenerated UUIDv4'
+      type: string
+      example: '6ce21a9e-f12b-408a-b129-1f3942fadc14'
+      pattern: '/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i'
+      required: false
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: 'https://discord.com/api/oauth2/authorize'
+          tokenUrl: 'https://discord.com/api/oauth2/token'
+          scopes:
+            identify: Grants access to id, username, discriminator and avatar
