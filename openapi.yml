@@ -97,12 +97,30 @@ paths:
           description: Successful Logout
         '401':
           description: Unauthorized
-  /api/v1/user/all:
+  /api/v1/users:
     get:
       summary: All Users
       description: |-
         Obtain a shallow user list for administration
         purposes
+      parameters:
+        - in: query
+          name: offset
+          required: false
+          schema:
+            type: integer
+            example: 100
+          description: |-
+            The number of items to skip before starting
+            to collect the desired resource.
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+            example: 100
+          description: |-
+            The number of items to return
       tags:
         - Library Management
       responses:
@@ -114,6 +132,8 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/User'
+        '400':
+          description: Bad Request
         '401':
           description: Unauthorized
         '403':
@@ -209,6 +229,24 @@ paths:
         of tags for tag management!
       tags:
         - Library Management
+      parameters:
+        - in: query
+          name: offset
+          required: false
+          schema:
+            type: integer
+            example: 100
+          description: |-
+            The number of items to skip before starting
+            to collect the desired resource.
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+            example: 100
+          description: |-
+            The number of items to return
       responses:
         '200':
           description: Shallow Tag List
@@ -227,6 +265,8 @@ paths:
         Create a Tag, which can be used within the API
         to categorize literature in easily searchable
         tags.
+      tags:
+        - Library Management
       requestBody:
         description: |-
           Data describing a unique tag, consisting out
@@ -246,16 +286,9 @@ paths:
   /api/v1/tag/{id}:
     put:
       summary: Update Tag
-      description: |-
-        Update the tag type or title.
-      parameters:
-        - in: path
-          name: id
-          description: |-
-            The Tag ID
-          required: true
-          schema:
-            $ref: '#/components/schemas/UUID'
+      description: Update the tag type or title.
+      tags:
+        - Library Management
       requestBody:
         description: |-
           Data describing a unique tag, consisting out
@@ -276,14 +309,8 @@ paths:
       summary: Delete Tag
       description: |-
         Deletes the tag with the specified ID.
-      parameters:
-        - in: path
-          name: id
-          description: |-
-            The Tag ID
-          required: true
-          schema:
-            $ref: '#/components/schemas/UUID'
+      tags:
+        - Library Management
       responses:
         '200':
           description: Tag Deleted
@@ -291,7 +318,119 @@ paths:
           description: Unauthorized
         '403':
           description: Forbidden
+    parameters:
+      - $ref: '#/components/parameters/idParam'
+  /api/v1/authors:
+    get:
+      summary: All Authors
+      description: |-
+        Obtain a shallow author list, which can be used for an
+        author filter or selection during book creation!
+      tags:
+        - Library Management
+      parameters:
+        - $ref: '#/components/parameters/offsetParam'
+        - $ref: '#/components/parameters/limitParam'
+      responses:
+        '200':
+          description: Shallow Author List
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Author'
+        '401':
+          description: Unauthorized
+  /api/v1/author:
+    post:
+      summary: Create Author
+      description: |-
+        Create an Author, so it can be used during book creation!
+      tags:
+        - Library Management
+      requestBody:
+        description: |-
+          Data required to create an author
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthorPayload'
+      responses:
+        '201':
+          description: Created Author
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+  /api/v1/author/{id}:
+    put:
+      summary: Update Author
+      description: |-
+        Updates the author data
+      tags:
+        - Library Management
+      requestBody:
+        description: |-
+          Data used to update the author on the database
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthorPayload'
+      responses:
+        '200':
+          description: Successfully Modified
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+    delete:
+      summary: Delete Author
+      description: |-
+        Deletes an Author
+      tags:
+        - Library Management
+      responses:
+        '200':
+          description: Successfully Deleted
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+    parameters:
+      - $ref: '#/components/parameters/idParam'
+
 components:
+  parameters:
+    idParam:
+      in: path
+      name: id
+      description: |-
+        The Tag ID
+      required: true
+      schema:
+        $ref: '#/components/schemas/UUID'
+    offsetParam:
+      in: query
+      name: offset
+      required: false
+      schema:
+        type: integer
+        example: 100
+      description: |-
+        The number of items to skip before starting
+        to collect the desired resource.
+    limitParam:
+      in: query
+      name: limit
+      required: false
+      schema:
+        type: integer
+        example: 100
+      description: |-
+        The number of items to return
   schemas:
     DiscordUser:
       title: DiscordUser
@@ -328,7 +467,6 @@ components:
         enabled:
           type: boolean
           default: true
-          required: false
         roles:
           type: array
           items:
@@ -344,7 +482,7 @@ components:
       description: 'Literature Tag'
       type: object
       allOf:
-        $ref: '#/components/schemas/TagData'
+        - $ref: '#/components/schemas/TagPayload'
       properties:
         id:
           $ref: '#/components/schemas/UUID'
@@ -371,10 +509,17 @@ components:
       title: Author
       description: 'Book Author / Publisher'
       type: object
+      allOf:
+        - $ref: '#/components/schemas/AuthorPayload'
       properties:
         id:
           $ref: '#/components/schemas/UUID'
-        lastName:
+    AuthorPayload:
+      title: AuthorPayload
+      description: 'Author Creation/Modification Payload'
+      type: object
+      properties:
+        firstName:
           type: string
           example: 'John Ronald Reuel'
         lastName:
@@ -427,7 +572,6 @@ components:
       type: string
       example: '6ce21a9e-f12b-408a-b129-1f3942fadc14'
       pattern: '/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i'
-      required: false
   securitySchemes:
     OAuth2:
       type: oauth2
@@ -437,3 +581,4 @@ components:
           tokenUrl: 'https://discord.com/api/oauth2/token'
           scopes:
             identify: Grants access to id, username, discriminator and avatar
+
