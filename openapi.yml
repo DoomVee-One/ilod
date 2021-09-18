@@ -123,6 +123,7 @@ paths:
             The number of items to return
       tags:
         - Library Management
+        - User
       responses:
         '200':
           description: Shallow User List
@@ -146,6 +147,7 @@ paths:
         authentication and adding the `READER` role.
       tags:
         - Library Management
+        - User
       requestBody:
         description: |-
           User Properties in order to properly identify
@@ -154,7 +156,12 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DiscordUser'
+              allOf:
+                - $ref: '#/components/schemas/DiscordUser'
+              required:
+                - id
+                - username
+                - discriminator
       responses:
         '201':
           description: Whitelisted User
@@ -173,6 +180,7 @@ paths:
         enabled users.
       tags:
         - Library Management
+        - User
       responses:
         '200':
           description: Shallow Whitelist
@@ -197,6 +205,7 @@ paths:
         care!
       tags:
         - Library Management
+        - User
       parameters:
         - in: path
           name: id
@@ -204,9 +213,7 @@ paths:
             The Discord ID of the user
           required: true
           schema:
-            type: string
-            pattern: '\d{18}'
-            example: '756757056941326397'
+            $ref: '#/components/schemas/DiscordID'
       responses:
         '200':
           description: Successfully disabled user
@@ -228,25 +235,11 @@ paths:
         for creating a tag enum or providing a list
         of tags for tag management!
       tags:
-        - Library Management
+        - Library
+        - Tag
       parameters:
-        - in: query
-          name: offset
-          required: false
-          schema:
-            type: integer
-            example: 100
-          description: |-
-            The number of items to skip before starting
-            to collect the desired resource.
-        - in: query
-          name: limit
-          required: false
-          schema:
-            type: integer
-            example: 100
-          description: |-
-            The number of items to return
+        - $ref: '#/components/parameters/offsetParam'
+        - $ref: '#/components/parameters/limitParam'
       responses:
         '200':
           description: Shallow Tag List
@@ -267,6 +260,7 @@ paths:
         tags.
       tags:
         - Library Management
+        - Tag
       requestBody:
         description: |-
           Data describing a unique tag, consisting out
@@ -275,7 +269,11 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TagPayload'
+              allOf:
+                - $ref: '#/components/schemas/TagPayload'
+              required:
+                - title
+                - type
       responses:
         '201':
           description: Tag Created
@@ -289,6 +287,7 @@ paths:
       description: Update the tag type or title.
       tags:
         - Library Management
+        - Tag
       requestBody:
         description: |-
           Data describing a unique tag, consisting out
@@ -297,7 +296,11 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TagPayload'
+              allOf:
+                - $ref: '#/components/schemas/TagPayload'
+              required:
+                - title
+                - type
       responses:
         '200':
           description: Tag Updated
@@ -311,6 +314,7 @@ paths:
         Deletes the tag with the specified ID.
       tags:
         - Library Management
+        - Tag
       responses:
         '200':
           description: Tag Deleted
@@ -328,6 +332,7 @@ paths:
         author filter or selection during book creation!
       tags:
         - Library Management
+        - Author
       parameters:
         - $ref: '#/components/parameters/offsetParam'
         - $ref: '#/components/parameters/limitParam'
@@ -349,6 +354,7 @@ paths:
         Create an Author, so it can be used during book creation!
       tags:
         - Library Management
+        - Author
       requestBody:
         description: |-
           Data required to create an author
@@ -356,7 +362,11 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AuthorPayload'
+              allOf:
+                - $ref: '#/components/schemas/AuthorPayload'
+              required:
+                - firstName
+                - lastName
       responses:
         '201':
           description: Created Author
@@ -371,6 +381,7 @@ paths:
         Updates the author data
       tags:
         - Library Management
+        - Author
       requestBody:
         description: |-
           Data used to update the author on the database
@@ -378,7 +389,11 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AuthorPayload'
+              allOf:
+                - $ref: '#/components/schemas/AuthorPayload'
+              required:
+                - firstName
+                - lastName
       responses:
         '200':
           description: Successfully Modified
@@ -392,6 +407,7 @@ paths:
         Deletes an Author
       tags:
         - Library Management
+        - Author
       responses:
         '200':
           description: Successfully Deleted
@@ -401,6 +417,118 @@ paths:
           description: Forbidden
     parameters:
       - $ref: '#/components/parameters/idParam'
+  /api/v1/books:
+    get:
+      summary: All Books
+      description: |-
+        Receive a list of all books
+      tags:
+        - Library
+        - Book
+      responses:
+        '200':
+          description: List of Books
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Book'
+        '401':
+          description: Unauthorized
+  /api/v1/book/{id}:
+    parameters:
+      - $ref: "#/components/parameters/idParam"
+    get:
+      summary: Get Book Data
+      description: |-
+        Obtain the book data with the provided ID
+      tags:
+        - Library
+        - Book
+      responses:
+        '200':
+          description: Successfully retrieved Book Data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Book not found
+    
+  /api/v1/book/download/{id}:
+    parameters:
+      - $ref: "#/components/parameters/idParam"
+    get:
+      summary: Get Book File
+      description: |-
+        Obtain the book file with the provided ID
+      tags:
+        - Library
+        - Book
+      responses:
+        '200':
+          description: Successfully retrieved Book File
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+            # TODO: Add support for more file extensions
+        '401':
+          description: Unauthorized
+        '404':
+          description: Book not found
+  /api/v1/book:
+    post:
+      summary: Create Book
+      description: |-
+        Upload a book and associate it with the appropriate
+        tags, authors and series.
+      tags:
+        - Library Management
+      requestBody:
+        description: |-
+          Data required to create a book
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/BookPayload'
+              properties:
+                file:
+                  type: string
+                  description: |-
+                    The Book File
+                  format: base64
+              required:
+                - title
+                - type
+                - format
+                - language
+                - modifiedBy
+                - file
+            encoding:
+              file:
+                contentType: application/pdf
+                # TODO: Add more supported encodings
+      responses:
+        '201':
+          description: Created Book
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: One or more Resources Not Found
+        '415':
+          description: Unsupported Media Type
 
 components:
   parameters:
@@ -438,9 +566,7 @@ components:
       type: object
       properties:
         id:
-          type: string
-          pattern: '\d{18}'
-          example: '756757056941326397'
+          $ref: '#/components/schemas/DiscordID'
         username:
           type: string
           example: 'イオタ-天才'
@@ -452,18 +578,9 @@ components:
       title: User
       description: 'User Object'
       type: object
+      allOf:
+        - $ref: '#/components/schemas/DiscordUser'
       properties:
-        id:
-          type: string
-          pattern: '\d{18}'
-          example: '756757056941326397'
-        username:
-          type: string
-          example: 'イオタ-天才'
-        discriminator:
-          type: string
-          pattern: '\d{4}'
-          example: '3316'
         enabled:
           type: boolean
           default: true
@@ -485,7 +602,9 @@ components:
         - $ref: '#/components/schemas/TagPayload'
       properties:
         id:
-          $ref: '#/components/schemas/UUID'
+          description: Unique Tag ID (UUIDv4)
+          allOf:
+            - $ref: '#/components/schemas/UUID'
     TagPayload:
       title: TagPayload
       description: 'Tag Data'
@@ -493,7 +612,7 @@ components:
       properties:
         title:
           type: string
-          example: 'Manga'
+          example: 'NOVEL'
         type:
           $ref: '#/components/schemas/TagType'
     TagType:
@@ -513,7 +632,9 @@ components:
         - $ref: '#/components/schemas/AuthorPayload'
       properties:
         id:
-          $ref: '#/components/schemas/UUID'
+          description: Unique Author ID (UUIDv4)
+          allOf:
+            - $ref: '#/components/schemas/UUID'
     AuthorPayload:
       title: AuthorPayload
       description: 'Author Creation/Modification Payload'
@@ -525,9 +646,108 @@ components:
         lastName:
           type: string
           example: 'Tolkien'
+    Book:
+      title: Book
+      description: 'Book'
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/BookPayload'
+      properties:
+        id:
+          description: Unique Book ID (UUIDv4)
+          allOf:
+            - $ref: '#/components/schemas/UUID'
+        createdOn:
+          description: Created Timestamp
+          type: string
+          format: date-time
+        createdBy:
+          description: (Created By) Librarian ID
+          allOf:
+            - $ref: '#/components/schemas/DiscordID'
+        modifiedOn:
+          description: Modified Timestamp
+          type: string
+          format: date-time
+    BookPayload:
+      title: BookPayload
+      description: 'Data required to create or modify a book!'
+      type: object
+      properties:
+        nsfw:
+          type: boolean
+          example: false
+          default: false
+        coverUrl:
+          type: string
+          description: |-
+            An optional thumbnail link. The frontend should use this as the thumbnail
+            if provided, otherwise it should attempt to fall back to the first page of
+            the book, if possible to retrieve! In case of failure it should display a 
+            default placeholder thumbnail.
+          example: 'https://static0.colliderimages.com/wordpress/wp-content/uploads/2016/07/the-lord-of-the-rings-book-cover.jpg'
+          nullable: true
+        title:
+          type: string
+          example: 'The Lord of the Rings'
+        synopsis:
+          type: string
+          description: |-
+            An optional, short and objective summary of the book!
+          example: |-
+            A young Hobbit known as Frodo has been thrown on an amazing adventure, 
+            when he is appointed the job of destroying the One Ring, which was 
+            created by the Dark Lord Sauron. He is assigned with three warriors 
+            including Gandelf, Aragorn, and Boromir. But it's not going to be an easy 
+            journey for the Fellowship of the Ring, on the ultimate quest to rid the 
+            Middle-earth of all evil.
+          nullable: true
+        type:
+          allOf:
+            - $ref: '#/components/schemas/BookType'
+          example: 'NOVEL'
+        format:
+          allOf:
+            - $ref: '#/components/schemas/BookFormat'
+          example: 'PDF'
+        tags:
+          type: array
+          description: |-
+            Array of Tag UUID's
+          items:
+            $ref: '#/components/schemas/UUID'
+        authors:
+          type: array
+          description: |-
+            Array of Author UUID's
+          items:
+            $ref: '#/components/schemas/UUID'
+        language:
+          type: string
+          description: |-
+            A 3 character language code specified by ISO 639-3.
+          example: 'eng'
+          pattern: '\w{3}'
+        year:
+          type: integer
+          description: |-
+            Publishing Year of the Book
+          example: 1954
+          nullable: true
+        seriesID:
+          description: |-
+            If the book is part of a series, then the ID of said
+            series should be indicated here.
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/UUID'
+        modifiedBy:
+          description: (Created or Modified By) Librarian ID
+          allOf:
+            - $ref: '#/components/schemas/DiscordID'
     BookFormat:
       title: BookFormat
-      description: 'The electronic format of the book'
+      description: 'The digital format (extension) of the book'
       type: string
       enum:
         - BZIP
@@ -566,12 +786,16 @@ components:
         - PAPER
         - DICTIONARY
         - ENCYCLOPEDIA
+    DiscordID:
+      title: Discord ID
+      type: string
+      pattern: '\d{18}'
+      example: '756757056941326397'
     UUID:
       title: UUID
-      description: 'Autogenerated UUIDv4'
       type: string
-      example: '6ce21a9e-f12b-408a-b129-1f3942fadc14'
       pattern: '/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i'
+      example: '6ce21a9e-f12b-408a-b129-1f3942fadc14'
   securitySchemes:
     OAuth2:
       type: oauth2
