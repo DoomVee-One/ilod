@@ -104,23 +104,8 @@ paths:
         Obtain a shallow user list for administration
         purposes
       parameters:
-        - in: query
-          name: offset
-          required: false
-          schema:
-            type: integer
-            example: 100
-          description: |-
-            The number of items to skip before starting
-            to collect the desired resource.
-        - in: query
-          name: limit
-          required: false
-          schema:
-            type: integer
-            example: 100
-          description: |-
-            The number of items to return
+        - $ref: '#/components/parameters/offsetParam'
+        - $ref: '#/components/parameters/limitParam'
       tags:
         - Library Management
         - User
@@ -139,6 +124,108 @@ paths:
           description: Unauthorized
         '403':
           description: Forbidden
+  /api/v1/subscriptions:
+    get:
+      summary: Get User Subscriptions
+      description: |-
+        Gets all subscriptions from a specific user.
+      parameters:
+        - in: query
+          name: user
+          schema:
+            $ref: '#/components/schemas/DiscordID'
+          required: false
+        - $ref: '#/components/parameters/offsetParam'
+        - $ref: '#/components/parameters/limitParam'
+      tags:
+        - Library Management
+        - Subscription
+      responses:
+        '200':
+          description: List of Subscriptions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Subscription'
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+  /api/v1/subscription/{discordID}:
+    put:
+      parameters:
+        - $ref: '#/components/parameters/discordIDParam'
+      description: Create Subscription
+      tags:
+        - Library Management
+        - Subscription
+      requestBody:
+        description: |-
+          Data describing a subscription object
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/SubscriptionPayload'
+              required:
+                - subscriptionType
+                - subscription
+      responses:
+        '201':
+          description: Successfully Subscribed
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Suscription Resource Not Found
+  /api/v1/subscription/{discordID}/{id}:
+    parameters:
+      - $ref: '#/components/parameters/discordIDParam'
+      - $ref: '#/components/parameters/idParam'
+    get:
+      summary: Get User Subscription
+      description: |-
+        Get a specific subscription for a
+        specific user.
+      tags:
+        - Library Management
+        - Subscription
+      responses:
+        '200':
+          description: 'Successful Subscription Retrieval'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscription'
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Subscription Not Found
+    delete:
+      summary: Unsubscribe
+      description: |-
+        Unsubscribe a user from their subscription
+      tags:
+        - Library Management
+        - Subscription
+      responses:
+        '200':
+          description: 'Successfully Unsubscribed'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Subscription Not Found
   /api/v1/user/whitelist:
     post:
       summary: Whitelist User
@@ -169,6 +256,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+        '400':
+          description: Bad Request
         '401':
           description: Unauthorized
         '403':
@@ -194,7 +283,7 @@ paths:
           description: Unauthorized
         '403':
           description: Forbidden
-  /api/v1/user/ban/{id}:
+  /api/v1/user/ban/{discordID}:
     patch:
       summary: Ban User
       description: |-
@@ -207,13 +296,7 @@ paths:
         - Library Management
         - User
       parameters:
-        - in: path
-          name: id
-          description: |-
-            The Discord ID of the user
-          required: true
-          schema:
-            $ref: '#/components/schemas/DiscordID'
+        - $ref: '#/components/parameters/discordIDParam'
       responses:
         '200':
           description: Successfully disabled user
@@ -221,6 +304,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+        '201':
+          description: Successfully blacklisted user
+        '400':
+          description: Bad Request
         '401':
           description: Unauthorized
         '403':
@@ -249,6 +336,8 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Tag'
+        '400':
+          description: Bad Request
         '401':
           description: Unauthorized
   /api/v1/tag:
@@ -277,6 +366,8 @@ paths:
       responses:
         '201':
           description: Tag Created
+        '400':
+          description: Bad Request
         '401':
           description: Unauthorized
         '403':
@@ -304,6 +395,10 @@ paths:
       responses:
         '200':
           description: Tag Updated
+        '201':
+          description: Tag Created
+        '400':
+          description: Bad Request
         '401':
           description: Unauthorized
         '403':
@@ -318,10 +413,14 @@ paths:
       responses:
         '200':
           description: Tag Deleted
+        '400':
+          description: Bad Request
         '401':
           description: Unauthorized
         '403':
           description: Forbidden
+        '404':
+          description: Tag Not Found
     parameters:
       - $ref: '#/components/parameters/idParam'
   /api/v1/authors:
@@ -345,6 +444,8 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Author'
+        '400':
+          description: Bad Request
         '401':
           description: Unauthorized
   /api/v1/author:
@@ -370,6 +471,8 @@ paths:
       responses:
         '201':
           description: Created Author
+        '400':
+          description: Bad Request
         '401':
           description: Unauthorized
         '403':
@@ -397,6 +500,10 @@ paths:
       responses:
         '200':
           description: Successfully Modified
+        '201':
+          description: Author Successfully Created
+        '400':
+          description: Bad Request
         '401':
           description: Unauthorized
         '403':
@@ -411,12 +518,138 @@ paths:
       responses:
         '200':
           description: Successfully Deleted
+        '400':
+          description: Bad Request
         '401':
           description: Unauthorized
         '403':
           description: Forbidden
+        '404':
+          description: Author not Found
     parameters:
       - $ref: '#/components/parameters/idParam'
+  /api/v1/series:
+    get:
+      summary: All Series
+      description: |-
+        Obtain a list of all series. In order to reduce
+        the size of the data, only names and ID's will be
+        transferred.
+      tags:
+        - Library Management
+        - Series
+      responses:
+        '200':
+          description: List of Series
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/SeriesPayload'
+                properties:
+                  id:
+                    description: Series UUID
+                    allOf:
+                      - $ref: '#/components/schemas/UUID'
+        '401':
+          description: Unauthorized
+  /api/v1/series/{id}:
+    parameters:
+      - $ref: '#/components/parameters/idParam'
+    get:
+      summary: Get Series
+      description: |-
+        Get Information & Books of a series by
+        the series ID.
+      tags:
+        - Library Management
+        - Series
+      responses:
+        '200':
+          description: Series Details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Series'
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '404':
+          description: Series Not Found
+    patch:
+      summary: Edit Series
+      description: |-
+        Edit the Series.
+      tags:
+        - Library Management
+        - Series
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/Series'
+                - title: SeriesPatch
+                  type: object
+                  required: true
+                  properties:
+                    title:
+                      description: Series Name
+                      type: string
+                      example: Lord of the Rings
+                      required: false
+                    booksDiff:
+                      description: Books to delete and add
+                      required: false
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          operation:
+                            description: Operation Type
+                            type: string
+                            required: true
+                            example: ADD
+                            enum:
+                              - ADD
+                              - REMOVE
+                          book:
+                            description: Book ID
+                            allOf:
+                              - $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Successfully Patched Series
+        '201':
+          description: Successfully Created Series
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Series Not Found
+    delete:
+      summary: Delete Series
+      description: |-
+        Delete a Series given its ID
+      tags:
+        - Library Management
+        - Series
+      responses:
+        '200':
+          description: Successfully Deleted
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Series Not Found
   /api/v1/books:
     get:
       summary: All Books
@@ -453,6 +686,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Book'
+        '400':
+          description: Bad Request
         '401':
           description: Unauthorized
         '404':
@@ -532,11 +767,16 @@ paths:
 
 components:
   parameters:
+    discordIDParam:
+      in: path
+      name: discordID
+      description: 'A Discord ID'
+      required: true
+      schema:
+        $ref: '#/components/schemas/DiscordID'
     idParam:
       in: path
       name: id
-      description: |-
-        The Tag ID
       required: true
       schema:
         $ref: '#/components/schemas/UUID'
@@ -786,6 +1026,67 @@ components:
         - PAPER
         - DICTIONARY
         - ENCYCLOPEDIA
+    Series:
+      title: Series
+      description: 'The data about a series'
+      type: object
+      properties:
+        id:
+          description: The ID of the Series
+          allOf:
+            - $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+          example: The Lord of the Rings
+        books:
+          type: array
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/Book'
+              - description: Book ID
+                allOf:
+                  - $ref: '#/components/schemas/UUID'
+    SeriesPayload:
+      title: SeriesPayload
+      description: 'The data required to create a Series'
+      type: object
+      properties:
+        name:
+          type: string
+          example: The Lord of the Rings
+    Subscription:
+      title: Subscription
+      description: |-
+        Subscription object carrying information about the
+        given users subscription.
+      type: object
+      properties:
+        subscriptionType:
+          $ref: '#/components/schemas/SubscriptionType'
+        subscription:
+          oneOf:
+            - $ref: '#/components/schemas/Author'
+            - $ref: '#/components/schemas/Series'
+    SubscriptionPayload:
+      title: SubscriptionPayload
+      description: 'Data required to create or modify a user subscription'
+      type: object
+      properties:
+        subscriptionType:
+          $ref: '#/components/schemas/SubscriptionType'
+        subscription:
+          description: |-
+            The UUID of the subscription object, which is
+            defined more precisely by the `subscriptionType`.
+          allOf:
+            - $ref: '#/components/schemas/UUID'
+    SubscriptionType:
+      title: SubscriptionType
+      description: 'The type of subscription'
+      type: string
+      enum:
+        - AUTHOR
+        - SERIES
     DiscordID:
       title: Discord ID
       type: string
@@ -805,4 +1106,5 @@ components:
           tokenUrl: 'https://discord.com/api/oauth2/token'
           scopes:
             identify: Grants access to id, username, discriminator and avatar
+
 
