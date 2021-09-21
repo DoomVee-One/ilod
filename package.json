@@ -1,0 +1,25 @@
+{
+  "name": "ilod",
+  "version": "1.0.0",
+  "description": "This projects aims to provide an online Library API & Frontend for work teams and students to use! That API will be capable of organizing and managing all kinds of books! The Frontend will provide a user friendly way to interact with the API and read or download the books from the server!",
+  "homepage": "https://github.com/rshchekotov/ilod#readme",
+  "bugs": {
+    "url": "https://github.com/rshchekotov/ilod/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rshchekotov/ilod.git"
+  },
+  "keywords": [
+    "TypeScript",
+    "Nest.js",
+    "Node.js",
+    "OpenAPI 3",
+    "REST"
+  ],
+  "author": "Roman Shchekotov",
+  "license": "MIT",
+  "devDependencies": {
+    "@nestjs/cli": "^8.1.1"
+  }
+}

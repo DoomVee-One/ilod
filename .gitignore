@@ -1,5 +1,16 @@
 # Secrets
 gh_token
+**/.env*
+
+# Dependencies
+**/node_modules/
+
+# Build
+**/dist/
+
+# Logs
+**/logs/
+**/pnpm-debug.log*
 
 # IDE
 .idea/

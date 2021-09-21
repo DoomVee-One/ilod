@@ -107,7 +107,6 @@ paths:
         - $ref: '#/components/parameters/offsetParam'
         - $ref: '#/components/parameters/limitParam'
       tags:
-        - Library Management
         - User
       responses:
         '200':
@@ -136,7 +135,6 @@ paths:
         to avoid huge data transfer only ID's and
         names will be sent!
       tags:
-        - Library Management
         - Reading List
       responses:
         '200':
@@ -160,7 +158,6 @@ paths:
       summary: Create Reading List
       description: Create Reading list for a User
       tags:
-        - Library Management
         - Reading List
       requestBody:
         content:
@@ -188,7 +185,6 @@ paths:
       summary: Get Reading List
       description: Get specific reading list from user
       tags:
-        - Library Management
         - Reading List
       responses:
         '200':
@@ -209,7 +205,6 @@ paths:
         Modify the list's name or add & delete books from
         the reading list.
       tags:
-        - Library Management
         - Reading List
       requestBody:
         content:
@@ -234,7 +229,6 @@ paths:
       description: |-
         Deletes the specified reading list
       tags:
-        - Library Management
         - Reading List
       responses:
         '200':
@@ -261,7 +255,6 @@ paths:
         - $ref: '#/components/parameters/offsetParam'
         - $ref: '#/components/parameters/limitParam'
       tags:
-        - Library Management
         - Subscription
       responses:
         '200':
@@ -284,7 +277,6 @@ paths:
         - $ref: '#/components/parameters/discordIDParam'
       description: Create Subscription
       tags:
-        - Library Management
         - Subscription
       requestBody:
         description: |-
@@ -318,7 +310,6 @@ paths:
         Get a specific subscription for a
         specific user.
       tags:
-        - Library Management
         - Subscription
       responses:
         '200':
@@ -340,7 +331,6 @@ paths:
       description: |-
         Unsubscribe a user from their subscription
       tags:
-        - Library Management
         - Subscription
       responses:
         '200':
@@ -358,7 +348,6 @@ paths:
         Whitelists a user in the database by enabling
         authentication and adding the `READER` role.
       tags:
-        - Library Management
         - User
       requestBody:
         description: |-
@@ -393,7 +382,6 @@ paths:
         Retrieve the Whitelist, which contains exclusively
         enabled users.
       tags:
-        - Library Management
         - User
       responses:
         '200':
@@ -418,7 +406,6 @@ paths:
         This is a security measure, which should be used with
         care!
       tags:
-        - Library Management
         - User
       parameters:
         - $ref: '#/components/parameters/discordIDParam'
@@ -473,7 +460,6 @@ paths:
         to categorize literature in easily searchable
         tags.
       tags:
-        - Library Management
         - Tag
       requestBody:
         description: |-
@@ -502,7 +488,6 @@ paths:
       summary: Update Tag
       description: Update the tag type or title.
       tags:
-        - Library Management
         - Tag
       requestBody:
         description: |-
@@ -533,7 +518,6 @@ paths:
       description: |-
         Deletes the tag with the specified ID.
       tags:
-        - Library Management
         - Tag
       responses:
         '200':
@@ -555,7 +539,6 @@ paths:
         Obtain a shallow author list, which can be used for an
         author filter or selection during book creation!
       tags:
-        - Library Management
         - Author
       parameters:
         - $ref: '#/components/parameters/offsetParam'
@@ -579,7 +562,6 @@ paths:
       description: |-
         Create an Author, so it can be used during book creation!
       tags:
-        - Library Management
         - Author
       requestBody:
         description: |-
@@ -608,7 +590,6 @@ paths:
       description: |-
         Updates the author data
       tags:
-        - Library Management
         - Author
       requestBody:
         description: |-
@@ -638,7 +619,6 @@ paths:
       description: |-
         Deletes an Author
       tags:
-        - Library Management
         - Author
       responses:
         '200':
@@ -661,7 +641,6 @@ paths:
         the size of the data, only names and ID's will be
         transferred.
       tags:
-        - Library Management
         - Series
       responses:
         '200':
@@ -688,7 +667,6 @@ paths:
         Get Information & Books of a series by
         the series ID.
       tags:
-        - Library Management
         - Series
       responses:
         '200':
@@ -708,7 +686,6 @@ paths:
       description: |-
         Edit the Series.
       tags:
-        - Library Management
         - Series
       requestBody:
         content:
@@ -718,15 +695,14 @@ paths:
                 - $ref: '#/components/schemas/Series'
                 - title: SeriesPatch
                   type: object
-                  required: true
                   properties:
                     title:
                       description: Series Name
                       type: string
                       example: Lord of the Rings
-                      required: false
                     booksDiff:
-                      $ref: '#/components/schemas/BookDiff'
+                      allOf:
+                        - $ref: '#/components/schemas/BookDiff'
       responses:
         '200':
           description: Successfully Patched Series
@@ -745,7 +721,6 @@ paths:
       description: |-
         Delete a Series given its ID
       tags:
-        - Library Management
         - Series
       responses:
         '200':
@@ -831,7 +806,7 @@ paths:
         Upload a book and associate it with the appropriate
         tags, authors and series.
       tags:
-        - Library Management
+        - Book
       requestBody:
         description: |-
           Data required to create a book
@@ -889,7 +864,6 @@ paths:
       description: |-
         Search Book, Series, Author or User!
       tags:
-        - Library Management
         - Search
       responses:
         '200':
@@ -1279,7 +1253,6 @@ components:
           $ref: '#/components/schemas/BookDiff'
     BookDiff:
       description: Books to delete or add
-      required: false
       type: array
       items:
         type: object
@@ -1287,7 +1260,6 @@ components:
           operation:
             description: Operation Type
             type: string
-            required: true
             example: ADD
             enum:
               - ADD
