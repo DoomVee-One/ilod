@@ -124,6 +124,129 @@ paths:
           description: Unauthorized
         '403':
           description: Forbidden
+  /api/v1/user/{discordID}/lists:
+    parameters:
+      - $ref: '#/components/parameters/discordIDParam'
+      - $ref: '#/components/parameters/offsetParam'
+      - $ref: '#/components/parameters/limitParam'
+    get:
+      summary: Get User Reading Lists
+      description: |-
+        Get all user reading list objects. In order
+        to avoid huge data transfer only ID's and
+        names will be sent!
+      tags:
+        - Library Management
+        - Reading List
+      responses:
+        '200':
+          description: Discord Reading Lists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadingLists'
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: User Not Found
+  /api/v1/user/{discordID}/list:
+    parameters:
+      - $ref: '#/components/parameters/discordIDParam'
+    post:
+      summary: Create Reading List
+      description: Create Reading list for a User
+      tags:
+        - Library Management
+        - Reading List
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReadingListPayload'
+      responses:
+        '201':
+          description: Reading List Created
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: User Not Found
+        '409':
+          description: Conflict
+  /api/v1/user/{discordID}/list/{id}:
+    parameters:
+      - $ref: '#/components/parameters/discordIDParam'
+      - $ref: '#/components/parameters/idParam'
+    get:
+      summary: Get Reading List
+      description: Get specific reading list from user
+      tags:
+        - Library Management
+        - Reading List
+      responses:
+        '200':
+          description: Reading List
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadingList'
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '404':
+          description: One or more Resources Not Found
+    patch:
+      summary: Modify Reading List
+      description: |-
+        Modify the list's name or add & delete books from
+        the reading list.
+      tags:
+        - Library Management
+        - Reading List
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReadingListPatch'
+      responses:
+        '200':
+          description: Successful Modification
+        '201':
+          description: Successful Creation
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: One or more Resources Not Found
+    delete:
+      summary: Delete Reading List
+      description: |-
+        Deletes the specified reading list
+      tags:
+        - Library Management
+        - Reading List
+      responses:
+        '200':
+          description: Successful Deletion
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: One or more Resources Not Found
   /api/v1/subscriptions:
     get:
       summary: Get User Subscriptions
@@ -151,6 +274,8 @@ paths:
                   $ref: '#/components/schemas/Subscription'
         '400':
           description: Bad Request
+        403:
+          description: Forbidden
         '401':
           description: Unauthorized
   /api/v1/subscription/{discordID}:
@@ -601,24 +726,7 @@ paths:
                       example: Lord of the Rings
                       required: false
                     booksDiff:
-                      description: Books to delete and add
-                      required: false
-                      type: array
-                      items:
-                        type: object
-                        properties:
-                          operation:
-                            description: Operation Type
-                            type: string
-                            required: true
-                            example: ADD
-                            enum:
-                              - ADD
-                              - REMOVE
-                          book:
-                            description: Book ID
-                            allOf:
-                              - $ref: '#/components/schemas/UUID'
+                      $ref: '#/components/schemas/BookDiff'
       responses:
         '200':
           description: Successfully Patched Series
@@ -764,6 +872,45 @@ paths:
           description: One or more Resources Not Found
         '415':
           description: Unsupported Media Type
+  /api/v1/search:
+    get:
+      parameters:
+        - in: query
+          name: q
+          description: Query parameter
+          required: true
+          schema:
+            type: string
+            description: Query string
+            example: J.R.R. Tolkien
+        - $ref: '#/components/parameters/offsetParam'
+        - $ref: '#/components/parameters/limitParam'
+      summary: Search Resource
+      description: |-
+        Search Book, Series, Author or User!
+      tags:
+        - Library Management
+        - Search
+      responses:
+        '200':
+          description: Resource List
+          content:
+            application/json:
+              schema:
+                description: Search Result
+                type: array
+                items:
+                  oneOf:
+                    - $ref: '#/components/schemas/Book'
+                    - $ref: '#/components/schemas/Series'
+                    - $ref: '#/components/schemas/Author'
+                    - $ref: '#/components/schemas/User'
+        '204':
+          description: Nothing Found
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
 
 components:
   parameters:
@@ -1087,6 +1234,68 @@ components:
       enum:
         - AUTHOR
         - SERIES
+    ReadingLists:
+      description: Multiple Reading Lists
+      type: array
+      items:
+        properties:
+          id:
+            description: Reading List ID
+            allOf:
+              - $ref: '#/components/schemas/UUID'
+          name:
+            type: string
+            example: Modern Literature List
+    ReadingList:
+      description: Reading List
+      type: object
+      properties:
+        id:
+          description: Reading List ID
+          allOf:
+            - $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+          example: Modern Literature
+        books:
+          type: array
+          items:
+            $ref: '#/components/schemas/Book'
+    ReadingListPayload:
+      description: Reading List Payload
+      type: object
+      properties:
+        name:
+          type: string
+          example: Fantasy List
+    ReadingListPatch:
+      description: Reading List Patch
+      type: object
+      properties:
+        name:
+          type: string
+          example: Modern Fantasy List
+        books:
+          $ref: '#/components/schemas/BookDiff'
+    BookDiff:
+      description: Books to delete or add
+      required: false
+      type: array
+      items:
+        type: object
+        properties:
+          operation:
+            description: Operation Type
+            type: string
+            required: true
+            example: ADD
+            enum:
+              - ADD
+              - REMOVE
+          book:
+            description: Book ID
+            allOf:
+              - $ref: '#/components/schemas/UUID'
     DiscordID:
       title: Discord ID
       type: string
@@ -1106,5 +1315,3 @@ components:
           tokenUrl: 'https://discord.com/api/oauth2/token'
           scopes:
             identify: Grants access to id, username, discriminator and avatar
-
-
