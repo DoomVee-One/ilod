@@ -71,7 +71,9 @@ paths:
       description: |-
         Retrieves the Token information from the Discord OAuth2 API
         and stores id, username & discriminator securely in the
-        database for future use.
+        database for future use. In case of a Forbidden response the
+        user that attempts to log in is a valid Discord User, but is
+        either not whitelisted or banned from using this service.
       tags:
         - Authentication
       security: []
@@ -114,7 +116,11 @@ paths:
       summary: All Users
       description: |-
         Obtain a shallow user list for administration
-        purposes
+        purposes.
+        The Bad Request response indicated that your
+        query parameters are malformed.
+        The Forbidden Response indicated that you lack
+        permissions for this action.
       parameters:
         - $ref: '#/components/parameters/offsetParam'
         - $ref: '#/components/parameters/limitParam'
@@ -146,6 +152,12 @@ paths:
         Get all user reading list objects. In order
         to avoid huge data transfer only ID's and
         names will be sent!
+        Bad requests occur when either the provided
+        Discord ID is invalid or if the query
+        parameters are malformed.
+        A Not Found error is returned in those cases
+        when the provided Discord ID does not correspond
+        to any previously registered user!
       tags:
         - Reading List
       responses:
@@ -168,7 +180,16 @@ paths:
       - $ref: '#/components/parameters/discordIDParam'
     post:
       summary: Create Reading List
-      description: Create Reading list for a User
+      description: |-
+        Create a uniquely named reading list for a user.
+        A Bad Request occurs if the provided Discord ID is
+        not a valid Discord ID or if the
+        provided request body is invalid / empty!
+        The Not Found response occurs if the user with the
+        provided Discord ID is not enabled/registered yet.
+        The Conflict response happens if the user tries to
+        create a reading list with a name that already exists
+        in the users "namespace"!
       tags:
         - Reading List
       requestBody:
@@ -195,7 +216,12 @@ paths:
       - $ref: '#/components/parameters/idParam'
     get:
       summary: Get Reading List
-      description: Get specific reading list from user
+      description: |-
+        Get specific reading list from user.
+        In case of a 404, it means that either user or list
+        wasn't found! This error will be narrowed down in the
+        actual HTTP Status Message, which hopefully will provide
+        grounds for debugging!
       tags:
         - Reading List
       responses:
@@ -216,6 +242,22 @@ paths:
       description: |-
         Modify the list's name or add & delete books from
         the reading list.
+        The Modification can be either a creation of a new
+        list at that id (which has to be a UUIDv4) or the
+        modification of an existing list at that id. The
+        difference is mirrored in the HTTP Status Code.
+        A bad request will occur of one of the following
+        conditions are met:
+        - Invalid Discord ID
+        - Invalid List UUID
+        - Missing, Empty or Malformed Request Body
+        - Invalid Book Reference Format
+
+        Resources not found is returned if the User or the
+        provided books cannot be found inside the database!
+        Lastly, the Forbidden response indicated lacking
+        permissions for the creation or modification of a user
+        list under the provided "userspace".
       tags:
         - Reading List
       requestBody:
@@ -239,7 +281,10 @@ paths:
     delete:
       summary: Delete Reading List
       description: |-
-        Deletes the specified reading list
+        Deletes the specified reading list.
+        A Bad Request indicates an error in the List ID Format.
+        A Not Found Error indicates a missing user or list.
+        Details will be provided in the status message.
       tags:
         - Reading List
       responses:
@@ -258,12 +303,13 @@ paths:
       summary: Get User Subscriptions
       description: |-
         Gets all subscriptions from a specific user.
+        The Bad Request Error indicates an error with the query parameters.
       parameters:
         - in: query
           name: user
           schema:
             $ref: '#/components/schemas/DiscordID'
-          required: false
+          required: true
         - $ref: '#/components/parameters/offsetParam'
         - $ref: '#/components/parameters/limitParam'
       tags:
@@ -287,7 +333,15 @@ paths:
     put:
       parameters:
         - $ref: '#/components/parameters/discordIDParam'
-      description: Create Subscription
+      description: |-
+        Create Subscription for a user given the
+        subscription type and the object id to
+        subscribe to.
+        The Bad Request response means that the request
+        body is invalid (missing or malformed) or the
+        discord ID is invalid.
+        The Not Found Error occurs when either User or the
+        subscription resources haven't been found!
       tags:
         - Subscription
       requestBody:
@@ -311,7 +365,7 @@ paths:
         '403':
           description: Forbidden
         '404':
-          description: Suscription Resource Not Found
+          description: One or more Resources Not Found
   /api/v1/subscription/{discordID}/{id}:
     parameters:
       - $ref: '#/components/parameters/discordIDParam'
@@ -354,11 +408,16 @@ paths:
         '404':
           description: Subscription Not Found
   /api/v1/user/whitelist:
-    post:
+    patch:
       summary: Whitelist User
       description: |-
         Whitelists a user in the database by enabling
         authentication and adding the `READER` role.
+        A Bad Request response indicates missing or
+        invalid properties in the request body.
+        The Forbidden response is returned when the
+        users permissions are insufficient for this
+        operation.
       tags:
         - User
       requestBody:
@@ -376,8 +435,14 @@ paths:
                 - username
                 - discriminator
       responses:
-        '201':
+        '200':
           description: Whitelisted User
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '201':
+          description: Created Reader
           content:
             application/json:
               schema:
@@ -393,6 +458,7 @@ paths:
       description: |-
         Retrieve the Whitelist, which contains exclusively
         enabled users.
+        The Forbidden response indicated lack of permissions.
       tags:
         - User
       responses:
@@ -417,6 +483,11 @@ paths:
         them from logging back in by disabling their account!  
         This is a security measure, which should be used with
         care!
+        A Bad Request occurs when the provided ID is not a valid
+        Discord ID.
+        A 418 response occurs when you try to ban another
+        Administrator. Get yourself a cup of tea and read some
+        books instead!
       tags:
         - User
       parameters:
