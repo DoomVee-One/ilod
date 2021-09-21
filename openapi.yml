@@ -16,12 +16,24 @@ info:
       other individual.
 
     # Authentication
-    You can login with the `/auth/login` endpoint. There you
-    will be redirected to Discord OAuth2 API, which will then allow
-    us upon redirect to determine, whether you are a whitelisted
-    library user or not.
     Only whitelisted users will then be able to access the library's
     resources!
+    ## OAuth2
+    You can login with the `/auth/login` endpoint. There you
+    will be redirected to Discord OAuth2 API, which will ask
+    you to log in, so that his application knows your:
+    - Discord ID
+    - Discord Username
+    - Discord Discriminator
+    - Discord Avatar (as of 09/21/2021 unused)
+    ## Local Whitelist
+    Apart from the Discord OAuth2 _Authentication_ there is
+    also a local whitelist, which is crossreferenced using the
+    Discord ID in order to determine, whether the user is permitted
+    to use this service.
+    The `/api/v1/user/whitelist` and `/api/v1/user/ban/{id}`
+    endpoints allow the modification of this local whitelist by
+    Administrators.
 
     # Rate Limits
     The API enforces rate limits to prevent the server from being

@@ -1,0 +1,23 @@
+{
+  "title": "Imperial Library of Doom",
+  "sortPropsAlphabetically": true,
+  "hideDownloadButton": false,
+  "hideHostname": false,
+  "tagGroups": [
+    {
+      "name": "Authentication",
+      "tags": [ "Authentication" ]
+    },
+    {
+      "name": "Library Management",
+      "tags": [
+        "User", "Reading List", "Subscription",
+        "Tag", "Author", "Series", "Book"
+      ]
+    },
+    {
+      "name": "Library",
+      "tags": [ "Library", "Search" ]
+    }
+  ]
+}

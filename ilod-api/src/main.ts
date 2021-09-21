@@ -26,30 +26,9 @@ async function bootstrap() {
 
   // Documentation Setup
   const oa3File = await fs.readFile('../openapi.yml', 'utf-8');
+  const redoc = await fs.readFile('./redoc.json', 'utf-8');
   const document = YAML.parse(oa3File);
-  const options: RedocOptions  = {
-    title: "Imperial Library of Doom",
-    sortPropsAlphabetically: true,
-    hideDownloadButton: false,
-    hideHostname: false,
-    tagGroups: [
-      {
-        name: "Authentication",
-        tags: [ "Authentication" ]
-      },
-      {
-        name: "Library Management",
-        tags: [
-          "User", "Reading List", "Subscription",
-          "Tag", "Author", "Series", "Book"
-        ]
-      },
-      {
-        name: "Library",
-        tags: [ "Library", "Search" ]
-      }
-    ]
-  };
+  const options: RedocOptions = JSON.parse(redoc);
   await RedocModule.setup('/docs', app, document, options);
 
   await app.listen(3000);
