@@ -1,12 +1,12 @@
 # Imperial Library of Doom API
 
 ## Setup
-<h5><i> 
+<sub><i> 
     In order to guarantee a proper setup, make sure to checkout
     the <a href="../README.md#Setup">general setup instructions</a>.
     There you will set up a proper environment for the API to
     work in.
-</i></h5>
+</i></sub>
 
 In order to set up the API, you only need to install its dependencies:
 ```shell
